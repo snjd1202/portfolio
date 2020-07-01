@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+			"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sSQL">
+	<!-- 팝니당 게시판 리스트 조회 -->
+	<select id="saList" resultType="sVO">
+		SELECT
+		    rno, pno, ptt, name, today, bcnt, memid, lcnt, savename
+		FROM
+			(SELECT
+			    rownum rno, pno, ptt, name, today, bcnt, memid, lcnt, savename
+			FROM
+				(SELECT
+					p.pno, ptt, name, TO_CHAR(today, 'yyyy-mm-dd hh24:mi:ss') today, bcnt, m.memid, lcnt, savename
+				FROM
+					promotion p, member m, image i
+				WHERE
+					p.memno = m.memno AND p.isshow = 'Y' AND i.pno = p.pno
+				ORDER BY
+					today desc) e) ee
+	</select>
+	<!-- 팝니당 게시판 게시글 디테일 조회 -->
+	<select id="saDetail" resultType="sVO" >
+		SELECT
+		    p.pno, ptt, pbd, name, bno, TO_CHAR(p.today, 'yyyy-mm-dd hh24:mi:ss') today, bcnt, bloc, cate, m.memid, bname,
+		    NVL(imgno, 0) imgno, NVL(oriname, 'none') oriname, NVL(savename, 'none') savename, r.rcnt, lcnt
+		FROM
+		    promotion p, image i, member m,
+		    (SELECT COUNT(*) rcnt FROM (SELECT * FROM review) WHERE isshow = 'Y' AND pno = #{pno}) r
+		WHERE
+		    p.pno = i.pno(+)
+		    AND p.memno = m.memno(+) AND p.isshow = 'Y'
+		    AND p.pno = #{pno}
+	</select>
+	<!-- 팝니당 게시판 게시글 쓰기 -->
+	<insert id="saWrite" parameterType="sVO">
+		INSERT INTO
+			promotion(pno, ptt, memno, pbd, cate)
+		VALUES(
+			(SELECT NVL(MAX(pno)+1, 1000) FROM promotion),
+			#{ptt},
+			(SELECT memno FROM member WHERE memid = #{memid}),
+			#{pbd}, #{cate}
+			)
+	</insert>
+	<!-- 팝니당 게시판 게시글 삭제 -->
+	<update id="saDelete" parameterType="int">
+		UPDATE
+			promotion
+		SET
+			pshow = 'N'
+		WHERE
+			pno = #{pno}
+	</update>
+	<!-- 팝니당 게시판 게시글 수정 -->
+	<update id="saEdit" parameterType="sVO">
+		UPDATE
+			promotion
+		SET
+			ptt = #{ptt},
+			pbd = #{pbd},
+			cate = #{cate}
+		WHERE
+			pno = #{pno}
+	</update>
+	<!-- 팝니당 게시판 게시글 조회수 -->
+	<update id="saBcnt" parameterType="int">
+		UPDATE
+			promotion
+		SET
+			bcnt = bcnt + 1
+		WHERE
+			pno = #{pno}
+	</update>
+	<!-- 리뷰 작성 -->
+	<insert id="reWrite" parameterType="sVO">
+			INSERT INTO
+			    review(rno, pno, rtt, rbd, memno, rst)
+			VALUES(
+			    (SELECT NVL(MAX(rno)+1, 10000) FROM review),
+			    #{pno}, #{rtt}, #{rbd},
+			    (SELECT memno FROM member WHERE memid = #{memid}),
+			    #{rst}
+			)
+	</insert>
+	<!-- 리뷰 리스트 조회 -->
+	<select id="reList" parameterType="int" resultType="sVO">
+		SELECT
+			ee.rrno, rno,name, memid, ptt, rtt, rbd, memno, rst, today, pno, savename
+			FROM
+				(SELECT
+					rownum rrno,rno, name, m.memid, ptt, rtt, rbd, m.memno, e.today, rst, pno, savename
+				FROM
+					(SELECT
+						p.pno, ptt, m.bno, pbd, TO_CHAR(r.today, 'yyyy-mm-dd hh24:mi:ss') today, bcnt, p.isshow, cate, r.rno, rtt, rbd, p.memno, rst, r.isshow, savename
+					FROM 
+						PROMOTION p, REVIEW r, image i, member m
+					WHERE
+						r.isshow = 'Y'
+                        AND
+                        i.pno = p.pno
+                        AND
+                        m.memno = p.memno
+                        AND
+						p.pno = null OR r.rno = i.rno
+						AND
+						p.pno = #{pno}
+						) e, member m
+				WHERE
+					m.memno = e.memno
+				ORDER BY
+			 		today
+			 	) ee
+	</select>
+	<!-- 리뷰 글 수정 -->
+	<update id="reEdit">
+		UPDATE
+			review
+		SET
+			rtt = #{rtt},
+			rbd = #{rbd},
+			rst = #{rst}
+		WHERE
+			rno = #{rno}
+	</update>
+	<!-- 리뷰 글 삭제 -->
+	<update id="reDelete" parameterType="sVO">
+		UPDATE
+	        review	
+	    SET
+	        isshow = 'N'
+	    WHERE
+	        rno = #{rno}
+	</update>
+	<!-- 게시글 이미지  파일 첨부 -->
+	<insert id="saImage">
+		INSERT INTO
+			image(imgno, oriname, savename, pno)
+		VALUES(
+			(SELECT NVL(MAX(imgno)+1, 10000000) FROM image), 
+			#{oriname}, #{savename}, (SELECT NVL(MAX(pno), 10000000) FROM promotion)
+		)
+	</insert>
+	<!-- 리뷰 이미지 파일 첨부 -->
+	<insert id="reImage">
+		INSERT INTO
+			image(imgno, oriname, savename, rno)		
+		VALUES(
+			(SELECT NVL(MAX(imgno)+1, 10000000) FROM image),
+			#{oriname}, #{savename},
+			(SELECT NVL(MAX(rno), 100000) FROM review)
+		)
+	</insert>
+	<!-- 좋아요 아이디 중복 체크 -->
+	<select id="likecheck" resultType="string" parameterType="sVO">
+		SELECT
+		    m.memid
+		FROM
+		    plike p, member m
+		WHERE
+		    p.pno = #{pno}
+		    AND
+		    p.memno = (SELECT memno FROM member WHERE memid = #{memid})
+		    AND
+		    m.memno = p.memno
+			
+	</select>
+	<!-- 좋아요 테이블에 데이터 추가 -->
+	<insert id="like">
+		INSERT INTO
+		    plike(lno, pno, memno)
+		VALUES(
+		    (SELECT NVL(MAX(lno)+1, 100000) FROM plike), 
+		    #{pno}, (SELECT memno FROM member WHERE memid=#{memid})
+		    )
+	</insert>
+	<!-- 팝니당 글 테이블 좋아요 컬럼 수 증가 -->
+	<update id="likeup">
+		UPDATE
+		    promotion
+		SET
+		    lcnt = lcnt + 1
+		WHERE
+		    pno = #{pno}
+	</update>
+	<!-- 팝니당 글 테이블 좋아요 컬럼 수 감소 -->
+	<update id="likedown">
+		UPDATE
+		    promotion
+		SET
+		    lcnt = lcnt - 1
+		WHERE
+		    pno = #{pno}
+	</update>
+	<!-- 좋아요 테이블 데이터 삭제(좋아요 취소) -->
+	<delete id="dislike">
+		DELETE FROM 
+		    plike
+		WHERE
+		    pno = #{pno}
+		    AND
+		    memno = (SELECT memno FROM member WHERE memid=#{memid})
+	</delete>
+</mapper>
