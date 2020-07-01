@@ -20,7 +20,7 @@
     - Map API 활용가능<br>
   <br>
   <b>HTML/CSS</b><br>
-    - 심플한 뷰 제작 가능<br>
+    - 심플한 View 제작 가능<br>
     - 기본틀 작성 가능<br>
   <br>
   <b>JQuery</b><br>
