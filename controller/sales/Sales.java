@@ -30,7 +30,7 @@ public class Sales {
 	@Inject
 	private SalesService service;
 	
-	// Sales List Page
+	// 팝니당 게시판 게시글 리스트 조회
 	@RequestMapping("/sales.pro")
 	public ModelAndView getList(ModelAndView mv) {
 		try {
@@ -44,7 +44,7 @@ public class Sales {
 		return mv;
 	}
 	
-	// Sales Detail Page
+	// 게시글 상세조회
 	@RequestMapping(value="/sales_inside.pro", method=RequestMethod.GET)
 	public ModelAndView saDetail(ModelAndView mv, SalesVO sVO) {
 		try {
@@ -60,14 +60,14 @@ public class Sales {
 		return mv;
 	}
 	
-	// Sales Write View Page
+	// 글 작성 뷰 페이지
 	@RequestMapping("/sales_write.pro")
 	public String saWrite() {
 		String view ="sales/sales_write";
 		return view;
 	}
 	
-	// Sales Write Action
+	// 글 작성 액션 컨트롤러
 	@RequestMapping(value="/sales_write.pro", method=RequestMethod.POST)
 //	@ResponseBody
 	public ModelAndView saWriteProc(SalesVO sVO, ModelAndView mv, FileVO fVO,  HttpSession session) {
@@ -89,7 +89,7 @@ public class Sales {
 		}
 		return mv;
 	}
-	// Sales Delete
+	// 게시글 삭제
 	@RequestMapping(value="/sales_inside.pro", method=RequestMethod.POST, params= {"spno"})
 	public ModelAndView saDelete(int spno, ModelAndView mv, SalesVO sVO) {
 		try {
@@ -104,7 +104,7 @@ public class Sales {
 		}
 		return mv;
 	}
-	// Sales Edit Page
+	// 게시글 수정
 	@RequestMapping(value="/sales_modify.pro", method=RequestMethod.POST, params= {"pno", "ptt", "pbd", "cate"})
 	public ModelAndView saEdit(int pno, String ptt, String pbd, String cate, SalesVO sVO, ModelAndView mv) {
 		try {
@@ -116,7 +116,7 @@ public class Sales {
 		}
 		return mv;
 	}
-	// Sales Edit RedirectView
+	// 게시글 수정 후 새로고침
 	@RequestMapping(value="/sales_modifyProc.pro", method=RequestMethod.POST, params= {"pno", "ptt", "pbd", "cate"})
 	public ModelAndView saEditProc(int pno, String ptt, String pbd, String cate, SalesVO sVO, ModelAndView mv) {
 		try {
@@ -129,7 +129,7 @@ public class Sales {
 		}
 		return mv;
 	}
-	// Review Add(ajax)
+	// 리뷰 등록(ajax)
 	@RequestMapping(value="/sales_review.pro", method=RequestMethod.POST)
 	@ResponseBody
 	public SalesVO reWrite(SalesVO sVO, @RequestParam("file")MultipartFile file, HttpSession session, ModelAndView mv) {
@@ -147,7 +147,7 @@ public class Sales {
 		}
 		return sVO;
 	}
-	// Review List(ajax)
+	// 리뷰 리스트 조회(ajax)
 	@RequestMapping("/reviewList.pro")
 	@ResponseBody
 	public ArrayList<SalesVO>  reList(ModelAndView mv,SalesVO sVO, int pno) throws Exception {
@@ -172,7 +172,7 @@ public class Sales {
 		}
 		return map;
 	}
-	// Review Edit(ajax)
+	// 리뷰 수정(ajax)
 	@RequestMapping(value="/reviewEdit.pro", method=RequestMethod.POST)
 	@ResponseBody
 	public Map reEdit(ModelAndView mv, SalesVO sVO) {
@@ -187,7 +187,7 @@ public class Sales {
 		map.put("result", cnt);
 		return map;
 	}
-	// Like Check(ajax)
+	// 좋아요 기능 (ajax)
 	@RequestMapping(value="/likeCheck.pro", method=RequestMethod.POST)
 	@ResponseBody
 	public SalesVO like(SalesVO sVO) {
